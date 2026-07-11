@@ -38,8 +38,8 @@ jobs:
         MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
         MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
       run: |
-        # Menjalankan MLProject menggunakan MLflow
-        mlflow run MLProject --env-manager local
+        # Menjalankan MLProject menggunakan MLflow dengan nama eksperimen yang sesuai
+        mlflow run MLProject --experiment-name Heart_Disease_Basic_Classification --env-manager local
 
     - name: Upload Pretrained Model Artifact
       uses: actions/upload-artifact@v4

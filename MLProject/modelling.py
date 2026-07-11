@@ -23,15 +23,19 @@ def train_model():
     y_test = test_df["target"]
     
     # 2. Setup MLflow Tracking
-    # Tentukan experiment name
-    mlflow.set_experiment("Heart_Disease_Basic_Classification")
+    # Tentukan experiment name jika tidak dijalankan via MLflow CLI
+    active_run_id = os.environ.get("MLFLOW_RUN_ID")
+    if active_run_id:
+        print(f"Menggunakan active run ID: {active_run_id}")
+    else:
+        mlflow.set_experiment("Heart_Disease_Basic_Classification")
     
     # Aktifkan Autologging
     mlflow.sklearn.autolog()
     
     # 3. Model Training
     print("Memulai pelatihan model dasar dengan MLflow autolog...")
-    with mlflow.start_run(run_name="RandomForest_Basic_Run") as run:
+    with mlflow.start_run(run_id=active_run_id, run_name="RandomForest_Basic_Run" if not active_run_id else None) as run:
         # Buat model dasar tanpa hyperparameter tuning
         model = RandomForestClassifier(random_state=42)
         model.fit(X_train, y_train)

@@ -1,4 +1,4 @@
-https://hub.docker.com/r/<username>/heart-disease-classifier
+https://hub.docker.com/r/Mzzqq/heart-disease-classifier
 
 Catatan untuk siswa:
 Ganti URL di atas dengan tautan repositori Docker Hub Anda sendiri.

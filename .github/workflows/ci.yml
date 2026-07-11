@@ -68,8 +68,8 @@ jobs:
         MODEL_URI=$(python -c 'import mlflow; client = mlflow.tracking.MlflowClient(); exp = client.get_experiment_by_name("Heart_Disease_Basic_Classification"); runs = client.search_runs(experiment_ids=[exp.experiment_id], order_by=["attribute.start_time DESC"], max_results=1); print(f"runs:/{runs[0].info.run_id}/model")')
         echo "Using Model URI: $MODEL_URI"
         
-        # Build Docker Image menggunakan MLflow CLI
-        mlflow models build-docker --model-uri "$MODEL_URI" --name $DOCKERHUB_USERNAME/heart-disease-classifier:latest
+        # Build Docker Image menggunakan MLflow CLI dengan env-manager local
+        mlflow models build-docker --model-uri "$MODEL_URI" --name $DOCKERHUB_USERNAME/heart-disease-classifier:latest --env-manager local
         
         # Push ke Docker Hub
         docker push $DOCKERHUB_USERNAME/heart-disease-classifier:latest

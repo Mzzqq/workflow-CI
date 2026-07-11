@@ -64,12 +64,12 @@ jobs:
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       run: |
-        # Mencari path run_id model terbaru dari local mlruns
-        RUN_ID=$(ls -t mlruns/0/ | grep -v 'meta.yaml' | head -n 1)
-        MODEL_URI="mlruns/0/$RUN_ID/artifacts/model"
+        # Mencari URI model terbaru secara dinamis menggunakan Python & MLflow Client
+        MODEL_URI=$(python -c 'import mlflow; client = mlflow.tracking.MlflowClient(); exp = client.get_experiment_by_name("Heart_Disease_Basic_Classification"); runs = client.search_runs(experiment_ids=[exp.experiment_id], order_by=["attribute.start_time DESC"], max_results=1); print(f"runs:/{runs[0].info.run_id}/model")')
+        echo "Using Model URI: $MODEL_URI"
         
         # Build Docker Image menggunakan MLflow CLI
-        mlflow models build-docker --model-uri $MODEL_URI --name $DOCKERHUB_USERNAME/heart-disease-classifier:latest
+        mlflow models build-docker --model-uri "$MODEL_URI" --name $DOCKERHUB_USERNAME/heart-disease-classifier:latest
         
         # Push ke Docker Hub
         docker push $DOCKERHUB_USERNAME/heart-disease-classifier:latest

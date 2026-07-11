@@ -1,4 +1,4 @@
-# Triggering automated model retraining pipeline update
+# Triggering automated model retraining pipeline update (v2)
 import os
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier

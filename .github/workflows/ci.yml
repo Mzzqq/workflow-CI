@@ -1,0 +1,75 @@
+name: Machine Learning Retraining CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'MLProject/**'
+  workflow_dispatch:
+
+jobs:
+  retrain-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Conda (Miniconda)
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: '3.12'
+
+    - name: Install MLflow & dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mlflow==2.19.0 pandas numpy scikit-learn matplotlib seaborn dagshub
+
+    - name: Run Retraining via MLProject
+      env:
+        MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+        MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+        MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      run: |
+        # Menjalankan MLProject menggunakan MLflow
+        mlflow run MLProject --no-conda
+
+    - name: Upload Pretrained Model Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trained-model
+        path: mlruns/
+
+    # --- Bagian Advance (Docker Hub Push) ---
+    # Langkah ini akan dijalankan jika secrets DOCKERHUB_USERNAME dan DOCKERHUB_TOKEN diatur di GitHub
+    - name: Log in to Docker Hub
+      if: env.DOCKERHUB_USERNAME != ''
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Docker Image
+      if: env.DOCKERHUB_USERNAME != ''
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      run: |
+        # Mencari path run_id model terbaru dari local mlruns
+        RUN_ID=$(ls -t mlruns/0/ | grep -v 'meta.yaml' | head -n 1)
+        MODEL_URI="mlruns/0/$RUN_ID/artifacts/model"
+        
+        # Build Docker Image menggunakan MLflow CLI
+        mlflow models build-docker --model-uri $MODEL_URI --name $DOCKERHUB_USERNAME/heart-disease-classifier:latest
+        
+        # Push ke Docker Hub
+        docker push $DOCKERHUB_USERNAME/heart-disease-classifier:latest

@@ -1,0 +1,4 @@
+GitHub Actions workflow is configured in:
+.github/workflows/ci.yml
+
+This folder (.workflow) exists to satisfy Dicoding directory structure requirements.
